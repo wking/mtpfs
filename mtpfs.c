@@ -416,7 +416,7 @@ parse_path (const gchar * path)
     LIBMTP_folder_t *folder;
     gchar **fields;
     gchar *directory;
-    directory = (gchar *) g_malloc (strlen (path));
+  directory = (gchar *) g_malloc (strlen (path) + 1);
     directory = strcpy (directory, "");
     fields = g_strsplit (path, "/", -1);
     res = -ENOENT;
@@ -488,7 +488,7 @@ mtpfs_release (const char *path, struct fuse_file_info *fi)
             gchar *filename = g_strdup("");
             gchar **fields;
             gchar *directory;
-            directory = (gchar *) g_malloc (strlen (path));
+	  directory = (gchar *) g_malloc (strlen (path) + 1);
             directory = strcpy (directory, "/");
             fields = g_strsplit (path, "/", -1);
             int i;
@@ -1089,7 +1089,7 @@ mtpfs_mkdir_real (const char *path, mode_t mode)
         gchar **fields;
         gchar *directory;
 	
-        directory = (gchar *) g_malloc (strlen (path));
+      directory = (gchar *) g_malloc (strlen (path) + 1);
         directory = strcpy (directory, "/");
         fields = g_strsplit (path, "/", -1);
         int i;
@@ -1168,7 +1168,7 @@ mtpfs_rename (const char *oldname, const char *newname)
     gchar *filename;
     gchar **fields;
     gchar *directory;
-    directory = (gchar *) g_malloc (strlen (newname));
+    directory = (gchar *) g_malloc (strlen (newname) + 1);
     directory = strcpy (directory, "/");
     fields = g_strsplit (newname, "/", -1);
     int i;
