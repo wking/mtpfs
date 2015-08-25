@@ -441,6 +441,7 @@ find_storage (const gchar * path)
 	    }
 	}
     }
+  DBG ("could not find storage for %s", path);
   return -1;
 }
 
@@ -559,6 +560,10 @@ parse_path (const gchar * path)
   res = -ENOENT;
   int storageid;
   storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return res;
+    }
   for (i = 0; fields[i] != NULL; i++)
     {
       if (strlen (fields[i]) > 0)
@@ -653,7 +658,11 @@ mtpfs_release (const char *path, struct fuse_file_info *fi)
 	  int i;
 	  int parent_id = 0;
 	  int storageid;
-	  storageid = find_storage (fields[0]);
+	  storageid = find_storage (path);
+	  if (storageid < 0)
+	    {
+	      return_unlock (-ENOENT);
+	    }
 	  for (i = 0; fields[i] != NULL; i++)
 	    {
 	      if (strlen (fields[i]) > 0)
@@ -905,6 +914,10 @@ mtpfs_readdir (const gchar * path, void *buf, fuse_fill_dir_t filler,
   int i;
   int storageid = -1;
   storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   // Get folder listing.
   int folder_id = 0;
   if (strcmp (path, "/") != 0)
@@ -1022,6 +1035,10 @@ mtpfs_getattr_real (const gchar * path, struct stat *stbuf)
 
   int storageid;
   storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return -ENOENT;
+    }
 
   if (g_ascii_strncasecmp (path, "/Playlists", 10) == 0)
     {
@@ -1194,6 +1211,10 @@ mtpfs_open (const gchar * path, struct fuse_file_info *fi)
 
   int storageid;
   storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   FILE *filetmp = tmpfile ();
   int tmpfile = fileno (filetmp);
   if (tmpfile != -1)
@@ -1349,6 +1370,10 @@ mtpfs_mkdir_real (const char *path, mode_t mode)
   item = g_slist_find_custom (myfiles, path, (GCompareFunc) strcmp);
   int item_id = parse_path (path);
   int storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   if ((item == NULL) && (item_id < 0))
     {
       // Split path and find parent_id
@@ -1428,6 +1453,10 @@ mtpfs_rmdir (const char *path)
       return_unlock (0);
     }
   int storageid = find_storage (path);
+  if (storageid < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   folder_id =
     lookup_folder_id (storageArea[storageid].folders, (gchar *) path, NULL);
   if (folder_id < 0)
@@ -1491,7 +1520,15 @@ mtpfs_rename (const char *oldname, const char *newname)
   LIBMTP_file_t *file;
 
   int storageid_old = find_storage (oldname);
+  if (storageid_old < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   int storageid_new = find_storage (newname);
+  if (storageid_new < 0)
+    {
+      return_unlock (-ENOENT);
+    }
   if (strcmp (oldname, "/") != 0)
     {
       folder_id =
